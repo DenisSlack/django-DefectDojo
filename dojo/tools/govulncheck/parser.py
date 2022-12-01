@@ -1,5 +1,6 @@
 import json
 from itertools import groupby
+from itertools import islice
 from dojo.models import Finding
 
 SEVERITY = 'Info'
@@ -16,11 +17,10 @@ class GovulncheckParser:
     def get_description_for_scan_types(self, scan_type):
         return "Import Govulncheck Scanner findings in JSON format."
 
-    def get_location(self, data, node):
-        call = data['Calls']['Functions'][str(node)]
-        location = f"{call['CallSites'][0]['Pos']['Filename']}:{str(call['CallSites'][0]['Pos']['Line'])}:" \
-                   f"{str(call['CallSites'][0]['Pos']['Column'])}"
-        return location
+    @staticmethod
+    def get_location(data, node):
+        call = data['Calls']['Functions'][str(node)]['CallSites'][0]['Pos']
+        return f"{call['Filename']}:{str(call['Line'])}:{str(call['Column'])}"
 
     def get_findings(self, scan_file, test):
 
@@ -35,23 +35,16 @@ class GovulncheckParser:
         list_vulns = data['Vulns']
 
         for cve, elems in groupby(list_vulns, key=lambda vuln: vuln['OSV']['aliases'][0]):
-            collected = False
+            first_elem = list(islice(elems, 1))
+            title = first_elem[0]['OSV']['id']
+            description = first_elem[0]['OSV']['details']
+            references = first_elem[0]['OSV']['references'][0]['url']
+            url = first_elem[0]['OSV']['affected'][0]['database_specific']['url']
             vuln_methods = set()
             impact = set()
-            title = str()
-            description = str()
-            references = str()
-            url = str()
             for elem in elems:
-                if not collected:
-                    title = elem['OSV']['id']
-                    description = elem['OSV']['details']
-                    references = elem['OSV']['references'][0]['url']
-                    url = elem['OSV']['affected'][0]['database_specific']['url']
-                    collected = True
                 impact.add(self.get_location(data, elem['CallSink']))
                 vuln_methods.update(elem['OSV']['affected'][0]['ecosystem_specific']['imports'][0]['symbols'])
-
             findings.append(Finding(
                 title=title,
                 cve=cve,
