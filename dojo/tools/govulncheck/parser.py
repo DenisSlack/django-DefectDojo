@@ -4,6 +4,7 @@ from itertools import islice
 from dojo.models import Finding
 
 SEVERITY = 'Info'
+NO_IMPACT = "In your code no call of these vulnerable function, but they be in call stack of other function"
 
 
 class GovulncheckParser:
@@ -19,45 +20,38 @@ class GovulncheckParser:
 
     @staticmethod
     def get_location(data, node):
-        calls = [x for x in data['Calls']['Functions'][str(node)]['CallSites'] if x['Parent'] == 1]
-        return list(map(lambda x: f"{x['Pos']['Filename']}:{str(x['Pos']['Line'])}:{str(x['Pos']['Column'])}",
-                        calls))
+        return [f"{x['Pos']['Filename']}:{x['Pos']['Line']}:{x['Pos']['Column']}" for x in
+                data['Calls']['Functions'][str(node)]['CallSites'] if x['Parent'] == 1]
 
     def get_findings(self, scan_file, test):
-
         findings = []
 
         # get data from report.json
         scan_data = scan_file.read()
         # remove intro from developer
         scan_data = scan_data[scan_data.find(b'{'):]
-        data = json.loads(scan_data)
-
-        if data is None:
+        try:
+            data = json.loads(scan_data)
+        except Exception:
             return findings
+        else:
+            list_vulns = data['Vulns']
 
-        list_vulns = data['Vulns']
-
-        for cve, elems in groupby(list_vulns, key=lambda vuln: vuln['OSV']['aliases'][0]):
-            first_elem = list(islice(elems, 1))
-            title = first_elem[0]['OSV']['id']
-            component = first_elem[0]["PkgPath"]
-            references = first_elem[0]['OSV']['references'][0]['url']
-            url = first_elem[0]['OSV']['affected'][0]['database_specific']['url']
-            vuln_methods = set(first_elem[0]['OSV']['affected'][0]['ecosystem_specific']['imports'][0]['symbols'])
-            impact = set(self.get_location(data, first_elem[0]['CallSink']))
-            for elem in elems:
-                impact.update(self.get_location(data, elem['CallSink']))
-                vuln_methods.update(elem['OSV']['affected'][0]['ecosystem_specific']['imports'][0]['symbols'])
-            findings.append(Finding(
-                title=title,
-                cve=cve,
-                references=references,
-                description=f"Vulnerable functions: {'; '.join(vuln_methods)}",
-                url=url,
-                impact='; '.join(impact) if impact else "In your code no call of these vulnerable function, " \
-                                                        "but they be in call stack of other function",
-                severity=SEVERITY,
-                component_name=component
-            ))
-        return findings
+            for cve, elems in groupby(list_vulns, key=lambda vuln: vuln['OSV']['aliases'][0]):
+                d = dict()
+                first_elem = list(islice(elems, 1))
+                d['cve'] = cve
+                d['severity'] = SEVERITY
+                d['title'] = first_elem[0]['OSV']['id']
+                d['component_name']= first_elem[0]["PkgPath"]
+                d['references'] = first_elem[0]['OSV']['references'][0]['url']
+                d['url'] = first_elem[0]['OSV']['affected'][0]['database_specific']['url']
+                vuln_methods = set(first_elem[0]['OSV']['affected'][0]['ecosystem_specific']['imports'][0]['symbols'])
+                impact = set(self.get_location(data, first_elem[0]['CallSink']))
+                for elem in elems:
+                    impact.update(self.get_location(data, elem['CallSink']))
+                    vuln_methods.update(elem['OSV']['affected'][0]['ecosystem_specific']['imports'][0]['symbols'])
+                d['impact'] = '; '.join(impact) if impact else NO_IMPACT
+                d['description'] = f"Vulnerable functions: {'; '.join(vuln_methods)}"
+                findings.append(Finding(**d))
+            return findings
