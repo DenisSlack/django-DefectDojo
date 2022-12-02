@@ -59,7 +59,7 @@ class TestBanditParser(DojoTestCase):
             self.assertEqual("Use of insecure MD2, MD4, MD5, or SHA1 hash function.", item.title)
             self.assertEqual(datetime.datetime(2021, 3, 30, 18, 23, 12, tzinfo=tzlocal()), item.date)
             self.assertEqual("Medium", item.severity)
-            self.assertEqual("dojo/tools/acunetix/parser.py", item.file_path)
+            self.assertEqual("dojo/tools/acunetix/parser_old.py", item.file_path)
             self.assertEqual("blacklist:B303", item.vuln_id_from_tool)
             self.assertEqual("Certain", item.get_scanner_confidence_text())
 

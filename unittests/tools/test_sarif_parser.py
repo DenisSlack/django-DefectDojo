@@ -187,7 +187,7 @@ class TestSarifParser(DojoTestCase):
         with self.subTest(i=0):
             item = findings[0]
             self.assertEqual(
-                "file:///home/damien/dd/dojo/tools/veracode/parser.py",
+                "file:///home/damien/dd/dojo/tools/veracode/parser_old.py",
                 item.file_path,
             )
             self.assertIsNone(item.unsaved_vulnerability_ids)
@@ -200,7 +200,7 @@ class TestSarifParser(DojoTestCase):
         with self.subTest(i=2):
             item = findings[2]
             self.assertEqual(
-                "file:///home/damien/dd/dojo/tools/qualys_infrascan_webgui/parser.py",
+                "file:///home/damien/dd/dojo/tools/qualys_infrascan_webgui/parser_old.py",
                 item.file_path,
             )
             self.assertEqual(169, item.line)

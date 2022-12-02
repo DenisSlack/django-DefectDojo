@@ -35,7 +35,7 @@ class TestHorusecParser(DojoTestCase):
                 finding = findings[50]
                 self.assertEqual("Detected MD5 hash algorithm which is considered insecure. MD5 is not collision resistant and is therefore not suitable as a cryptographic signature. Use SHA256 or SHA3 instead.", finding.title)
                 self.assertEqual("Medium", finding.severity)
-                self.assertEqual("dojo/tools/huskyci/parser.py", finding.file_path)
+                self.assertEqual("dojo/tools/huskyci/parser_old.py", finding.file_path)
                 self.assertEqual(55, finding.line)
                 self.assertEqual(datetime.date(2021, 10, 19), finding.date.date())
             with self.subTest(i=266):
@@ -67,7 +67,7 @@ class TestHorusecParser(DojoTestCase):
                 finding = findings[50]
                 self.assertEqual("Detected MD5 hash algorithm which is considered insecure. MD5 is not collision resistant and is therefore not suitable as a cryptographic signature. Use SHA256 or SHA3 instead.", finding.title)
                 self.assertEqual("Medium", finding.severity)
-                self.assertEqual("dojo/tools/trufflehog3/parser.py", finding.file_path)
+                self.assertEqual("dojo/tools/trufflehog3/parser_old.py", finding.file_path)
                 self.assertEqual(50, finding.line)
                 self.assertGreaterEqual(finding.scanner_confidence, 6)  # "Tentative"
             with self.subTest(i=265):
