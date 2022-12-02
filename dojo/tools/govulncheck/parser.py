@@ -4,7 +4,7 @@ from itertools import islice
 from dojo.models import Finding
 
 SEVERITY = 'Info'
-NO_IMPACT = "In your code no call of these vulnerable function, but they be in call stack of other function"
+NO_IMPACT = "In your code no call of these vulnerable function, but they in call stack of other function"
 
 
 class GovulncheckParser:
